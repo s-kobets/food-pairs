@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useRoutes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import Header from './components/Header'
@@ -11,10 +11,13 @@ import { setupDatabase, checkDatabaseHealth } from './lib/setupDatabase'
 import IngredientsChecker from './routes/IngredientsChecker'
 
 function App() {
+  const {pathname} =  window.location
   const [isDbReady, setIsDbReady] = useState(false)
   const [dbError, setDbError] = useState<string | null>(null)
+  const isMainPage = pathname === '/'
 
   useEffect(() => {
+    if (isMainPage) return
     const initializeDatabase = async () => {
       try {
         // Check if database is healthy first
@@ -34,13 +37,13 @@ function App() {
     }
 
     initializeDatabase()
-  }, [])
+  }, [isMainPage])
 
   if (dbError) {
     return <div className="text-red-500">Error: {dbError}</div>
   }
 
-  if (!isDbReady) {
+  if (!isMainPage && !isDbReady) {
     return <div>Setting up database...</div>
   }
 
