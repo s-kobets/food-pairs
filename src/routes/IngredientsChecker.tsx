@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { ChangeEvent, ClipboardEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { api } from '../lib/api'
 import { Food, Combination } from '../lib/types'
+import Foods from './Foods'
 
 const IngredientsChecker = () => {
   const [foods, setFoods] = useState<Food[]>([])
@@ -18,6 +19,19 @@ const IngredientsChecker = () => {
   useEffect(() => {
     loadData()
   }, [])
+
+  const getUniqueFoods = useCallback((foodsList: Food[]) => {
+    const uniqueFoodsMap = new Map();
+    
+    foodsList.forEach(food => {
+      const name = language === 'en' ? food.name : food.name_ru;
+      if (!uniqueFoodsMap.has(name.toLowerCase())) {
+        uniqueFoodsMap.set(name.toLowerCase(), food);
+      }
+    });
+    
+    return Array.from(uniqueFoodsMap.values());
+  }, []);
 
   const loadData = async () => {
     try {
@@ -77,6 +91,65 @@ const IngredientsChecker = () => {
     setMatchResults(results)
   }
 
+  const processInputTerms = (text: string) => {
+    // Split by both comma and "and", clean up the terms
+    const terms = text
+      .split(/,|\sand\s/i)  // Split by comma or " and "
+      .map(term => term.trim())
+      .filter(Boolean);  // Remove empty strings
+  
+    // Find and add matching foods
+    terms.forEach(term => {
+      // Use unique foods for matching
+      const uniqueFoods = getUniqueFoods(foods);
+      const matchingFood = uniqueFoods.find(food => {
+        const name = language === 'en' ? food.name : food.name_ru;
+        return name.toLowerCase() === term.toLowerCase();
+      });
+  
+      if (matchingFood && !selectedIngredients.find(i => i.id === matchingFood.id)) {
+        setSelectedIngredients(prev => [...prev, matchingFood]);
+      }
+    });
+
+    return terms;
+  };
+
+  const handleSearchInput = (e: ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    setSearchTerm(input);
+    
+    // If input ends with comma, process the input
+    if (input.endsWith(',')) {
+      processInputTerms(input);
+      setSearchTerm('');
+    }
+  };
+
+  const handlePasteInput = (e: ClipboardEvent) => {
+    // Get pasted text
+    const pastedText = e.clipboardData.getData('text');
+    
+    // Process the pasted text
+    processInputTerms(pastedText);
+    
+    // Prevent default paste behavior
+    e.preventDefault();
+    setSearchTerm('');
+  };
+
+  const handleUpdateIngridient = (value: string | number, key = 'id') => {
+    const selectedIds = selectedIngredients.map(f => f.id)
+    if (selectedIds.includes(Number(value))) {
+      setSelectedIngredients(selectedIngredients.filter(f => f.id !== Number(value)))
+      return
+    }
+    const food = foods.find(f => f[key as keyof typeof Foods] === Number(value))
+    if (food && !selectedIngredients.find(i => i.id === food.id)) {
+      setSelectedIngredients([...selectedIngredients, food])
+    }
+  }
+
   if (loading) return <div className="p-4">Loading...</div>
 
   return (
@@ -127,8 +200,10 @@ const IngredientsChecker = () => {
           {openMenu && <div className="border rounded p-2 absolute mt-1 z-[1] bg-white w-full gap-2 flex flex-col">
             <input
               type="text"
+              autoFocus
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchInput}
+              onPaste={handlePasteInput}
               className="w-full p-2 border rounded"
               placeholder="Search ingredient (e.g., 'tomato' or 'vegetable')..."
             />
@@ -136,15 +211,7 @@ const IngredientsChecker = () => {
               onClick={(e) => {
                 const value = (e.target as HTMLLIElement)?.value
                 if (value == null) return
-                const selectedIds = selectedIngredients.map(f => f.id)
-                if (selectedIds.includes(Number(value))) {
-                  setSelectedIngredients(selectedIngredients.filter(f => f.id !== Number(value)))
-                  return
-                }
-                const food = foods.find(f => f.id === Number(value))
-                if (food && !selectedIngredients.find(i => i.id === food.id)) {
-                  setSelectedIngredients([...selectedIngredients, food])
-                }
+                handleUpdateIngridient(value)
               }}
             >
               {foods.filter(food => language === 'en' ? food.name.toLowerCase().includes(searchTerm.toLowerCase()) : food.name_ru.toLowerCase().includes(searchTerm.toLowerCase())).map(food => (

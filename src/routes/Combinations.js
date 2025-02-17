@@ -89,11 +89,11 @@ const Combinations = () => {
     };
     const formatCombinationText = (combo) => {
         const first = combo.item1_type === 'food'
-            ? combo.food1?.name + ' (' + combo.food1?.name_ru + ')'
-            : `any ${combo.category1?.display_name.toLowerCase()} (${combo.category1?.display_name_ru.toLowerCase()})`;
+            ? combo.food1?.name || '' + ' (' + combo.food1?.name_ru || '' + ')'
+            : `any ${combo.category1?.display_name?.toLowerCase() || ''} (${combo.category1?.display_name_ru?.toLowerCase() || ''})`;
         const second = combo.item2_type === 'food'
-            ? combo.food2?.name + ' (' + combo.food2?.name_ru + ')'
-            : `any ${combo.category2?.display_name.toLowerCase()} (${combo.category2?.display_name_ru.toLowerCase()})`;
+            ? combo.food2?.name || '' + ` (${combo.food2?.name_ru || ''})`
+            : `any ${combo.category2?.display_name?.toLowerCase() || ''} (${combo.category2?.display_name_ru?.toLowerCase() || ''})`;
         return `${first} + ${second}`;
     };
     const formatSearchResult = (combo) => {
