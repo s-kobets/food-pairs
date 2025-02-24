@@ -16,22 +16,42 @@ export const api = {
     const { data } = await supabase
       .from('foods')
       .select(`
-        *,
-        category:categories(*)
+        id, 
+        name,
+        name_ru,
+        foods_categories (category_id)
       `)
       .order('name')
-    return data as Food[]
+    
+    return data?.map(i => ({id: i.id, name: i.name, name_ru: i.name_ru, category_ids: i.foods_categories.map(c => c.category_id)} as Food)) ?? []
   },
 
-  async addFood(name: string, name_ru: string, categoryId: number) {
+  async addFoodCategory(foodId: number, categoryId: number) {
     const { data, error } = await supabase
-      .from('foods')
-      .insert([{ name, name_ru, category_id: categoryId }])
+      .from('foods_categories')
+      .insert(({ food_id: foodId, category_id: categoryId }))
       .select()
       .single()
 
     if (error) throw error
+
     return data
+  },
+
+  async addFood(name: string, name_ru: string, categoryId: number) {
+    const { data: food, error: foodError } = await supabase
+      .from('foods')
+      .insert([{ name, name_ru }])
+      .select()
+      .single()
+
+    if (foodError) throw foodError
+
+    const foodId = food.id
+    const { error: categoryError } = await this.addFoodCategory(foodId, categoryId)
+    if (categoryError) throw categoryError
+
+    return food
   },
 
   // Combinations
@@ -40,20 +60,10 @@ export const api = {
       .from('combinations')
       .select(`
         *,
-        food1:foods!item1_id(
-          id,
-          name,
-          name_ru,
-          category:categories(*)
-        ),
-        food2:foods!item2_id(
-          id,
-          name,
-          name_ru,
-          category:categories(*)
-        ),
-        category1:categories!item1_category_id(*),
-        category2:categories!item2_category_id(*)
+        food1:foods!item1_id(id, name, name_ru),
+        food2:foods!item2_id(id, name, name_ru),
+        category1:categories!item1_category_id(id, display_name, display_name_ru),
+        category2:categories!item2_category_id(id, display_name, display_name_ru)
       `)
       .order('created_at', { ascending: false })
     return data as Combination[]

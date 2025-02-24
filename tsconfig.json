@@ -7,6 +7,9 @@
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
+    "rootDir": "./src",
     "types": ["vite/client", "vite/types/importMeta.d.ts"]
-  }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"],
 } 

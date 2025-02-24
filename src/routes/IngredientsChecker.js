@@ -42,7 +42,8 @@ const IngredientsChecker = () => {
     const checkIngredients = () => {
         const results = {
             goodPairs: [],
-            badPairs: []
+            badPairs: [],
+            notFound: []
         };
         for (let i = 0; i < selectedIngredients.length; i++) {
             for (let j = i + 1; j < selectedIngredients.length; j++) {
@@ -55,22 +56,25 @@ const IngredientsChecker = () => {
                         (combo.food1?.id === food2.id && combo.food2?.id === food1.id))) ||
                     // Category to Category
                     (combo.item1_type === 'category' && combo.item2_type === 'category' &&
-                        ((food1.category_id === combo.item1_category_id && food2.category_id === combo.item2_category_id) ||
-                            (food1.category_id === combo.item2_category_id && food2.category_id === combo.item1_category_id))) ||
+                        ((food1.category_ids.includes(combo.item1_category_id ?? NaN) && food2.category_ids.includes(combo.item2_category_id ?? NaN)) ||
+                            (food1.category_ids.includes(combo.item2_category_id ?? NaN) && food2.category_ids.includes(combo.item1_category_id ?? NaN)))) ||
                     // Food to Category
                     (combo.item1_type === 'food' && combo.item2_type === 'category' &&
-                        ((combo.food1?.id === food1.id && food2.category_id === combo.item2_category_id) ||
-                            (combo.food1?.id === food2.id && food1.category_id === combo.item2_category_id))) ||
+                        ((combo.food1?.id === food1.id && food2.category_ids.includes(combo.item2_category_id ?? NaN)) ||
+                            (combo.food1?.id === food2.id && food1.category_ids.includes(combo.item2_category_id ?? NaN)))) ||
                     // Category to Food
                     (combo.item1_type === 'category' && combo.item2_type === 'food' &&
-                        ((food1.category_id === combo.item1_category_id && combo.food2?.id === food2.id) ||
-                            (food2.category_id === combo.item1_category_id && combo.food2?.id === food1.id))));
+                        ((food1.category_ids.includes(combo.item1_category_id ?? NaN) && combo.food2?.id === food2.id) ||
+                            (food2.category_ids.includes(combo.item1_category_id ?? NaN) && combo.food2?.id === food1.id))));
                 const pair = `${language === 'en' ? food1.name : food1.name_ru} + ${language === 'en' ? food2.name : food2.name_ru}`;
-                if (match) {
-                    results.goodPairs.push(`${pair} (${match.rating}⭐)`);
+                if (match?.rating > 3) {
+                    results.goodPairs.push(`${pair} (${match?.rating}⭐)`);
+                }
+                else if (match?.rating) {
+                    results.badPairs.push(`${pair} (${match?.rating}⭐)`);
                 }
                 else {
-                    results.badPairs.push(pair);
+                    results.notFound.push(pair);
                 }
             }
         }
@@ -132,6 +136,7 @@ const IngredientsChecker = () => {
                                             if (value == null)
                                                 return;
                                             handleUpdateIngridient(value);
-                                        }, children: foods.filter(food => language === 'en' ? food.name.toLowerCase().includes(searchTerm.toLowerCase()) : food.name_ru.toLowerCase().includes(searchTerm.toLowerCase())).map(food => (_jsx("li", { value: food.id, className: `py-1 cursor-pointer hover:bg-gray-200 ${selectedIngredients.map(f => f.id).includes(food.id) ? 'bg-blue-100' : ''}`, children: language === 'en' ? food.name : food.name_ru }, food.id))) })] }), _jsx("button", { onClick: checkIngredients, disabled: selectedIngredients.length < 2, className: "mt-4 w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50", children: language === 'en' ? 'Check Compatibility' : 'Проверить совместимость' })] }), matchResults && (_jsxs("div", { className: "space-y-4", children: [matchResults.goodPairs.length > 0 && (_jsxs("div", { children: [_jsx("h2", { className: "font-semibold text-green-600 mb-2", children: language === 'en' ? 'Good combinations:' : 'Хорошие сочетания:' }), _jsx("div", { className: "space-y-1", children: matchResults.goodPairs.map(pair => (_jsxs("div", { className: "text-green-600", children: ["\u2713 ", pair] }, pair))) })] })), matchResults.badPairs.length > 0 && (_jsxs("div", { children: [_jsx("h2", { className: "font-semibold text-red-600 mb-2", children: language === 'en' ? 'Not found in database:' : 'Не найдено в базе данных:' }), _jsx("div", { className: "space-y-1", children: matchResults.badPairs.map(pair => (_jsxs("div", { className: "text-red-600", children: ["\u2717 ", pair] }, pair))) })] }))] }))] })] }));
+                                            setSearchTerm('');
+                                        }, children: foods.filter(food => language === 'en' ? food.name.toLowerCase().includes(searchTerm.toLowerCase()) : food.name_ru.toLowerCase().includes(searchTerm.toLowerCase())).map(food => (_jsx("li", { value: food.id, className: `py-1 cursor-pointer hover:bg-gray-200 ${selectedIngredients.map(f => f.id).includes(food.id) ? 'bg-blue-100' : ''}`, children: language === 'en' ? food.name : food.name_ru }, food.id))) })] }), _jsx("button", { onClick: checkIngredients, disabled: selectedIngredients.length < 2, className: "mt-4 w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50", children: language === 'en' ? 'Check Compatibility' : 'Проверить совместимость' })] }), matchResults && (_jsxs("div", { className: "space-y-4", children: [matchResults.goodPairs.length > 0 && (_jsxs("div", { children: [_jsx("h2", { className: "font-semibold text-green-600 mb-2", children: language === 'en' ? 'Good combinations:' : 'Хорошие сочетания:' }), _jsx("div", { className: "space-y-1", children: matchResults.goodPairs.map(pair => (_jsxs("div", { className: "text-green-600", children: ["\u2713 ", pair] }, pair))) })] })), matchResults.badPairs.length > 0 && (_jsxs("div", { children: [_jsxs("h2", { className: "font-semibold text-red-600 mb-2", children: [language === 'en' ? 'Bad combinations:' : 'Вредные сочетания:', "                "] }), _jsx("div", { className: "space-y-1", children: matchResults.badPairs.map(pair => (_jsxs("div", { className: "text-red-600", children: ["\u2717 ", pair] }, pair))) })] })), matchResults.notFound.length > 0 && (_jsxs("div", { children: [_jsx("h2", { className: "font-semibold text-red-600 mb-2", children: language === 'en' ? 'Not found in database:' : 'Не найдено в базе данных:' }), _jsx("div", { className: "space-y-1", children: matchResults.badPairs.map(pair => (_jsxs("div", { className: "text-red-600", children: ["\u2717 ", pair] }, pair))) })] }))] }))] })] }));
 };
 export default IngredientsChecker;

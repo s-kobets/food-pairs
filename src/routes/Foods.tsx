@@ -8,6 +8,7 @@ const Foods = () => {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [newFood, setNewFood] = useState({ name: '', name_ru: '', categoryId: '' })
+  const [newJoin, setNewJoin] = useState({ foodId: '', categoryId: '' })
   const [error, setError] = useState<string | null>(null)
   const [newCategory, setNewCategory] = useState({ 
     name: '', 
@@ -17,6 +18,7 @@ const Foods = () => {
   })
   const [showCategoryForm, setShowCategoryForm] = useState(false)
   const [showFoodForm, setShowFoodForm] = useState(false)
+  const [showJoinForm, setShowJoinForm] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -82,6 +84,25 @@ const Foods = () => {
     }
   }
 
+  const handleAddJoin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    if (!newJoin.foodId || !newJoin.categoryId) {
+      setError('Please fill in all fields / Пожалуйста, заполните все поля')
+      return
+    }
+
+    try {
+      await api.addFoodCategory(Number(newJoin.foodId), Number(newJoin.categoryId))
+      setNewJoin({ foodId: '', categoryId: '' })
+      loadData()
+    } catch (err) {
+      setError('Failed to add join / Не удалось добавить связь')
+      console.error(err)
+    }
+  }
+
   if (loading) return <div className="p-4">Loading...</div>
 
   return (
@@ -104,6 +125,14 @@ const Foods = () => {
             >
               <span className="flex items-center">
                 {showCategoryForm ? 'Hide Category Form' : '+ Add Category'}
+              </span>
+            </button>
+            <button
+              onClick={() => setShowJoinForm(!showJoinForm)}
+              className="text-blue-500 hover:text-blue-600 transition-colors duration-200"
+            >
+              <span className="flex items-center">
+                {showJoinForm ? 'Hide Food Form' : '+ Add Join F<->C'}
               </span>
             </button>
           </div>
@@ -203,10 +232,53 @@ const Foods = () => {
         </form>
       </div>
 
+      {/* Join Form */}
+      <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showJoinForm ? 'max-h-[500px] opacity-100 mb-8' : 'max-h-0 opacity-0'}`}>
+        <form onSubmit={handleAddJoin} className="p-4 bg-white rounded-lg shadow">
+          <h2 className="text-lg font-semibold mb-4">Add Join Food - Category</h2>
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <select
+                value={newJoin.foodId}
+                onChange={(e) => setNewJoin({ ...newJoin, foodId: e.target.value })}
+                className="p-2 border rounded"
+              >
+                <option value="">Select food / Выберите продукт</option>
+                {foods.map(food => (
+                  <option key={food.id} value={food.id}>
+                    {food.name} ({food.name_ru})
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={newFood.categoryId}
+                onChange={(e) => setNewFood({ ...newFood, categoryId: e.target.value })}
+                className="p-2 border rounded"
+              >
+                <option value="">Select category / Выберите категорию</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.display_name} ({category.display_name_ru})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              {`Add Join F <-> C / Добавить связь F <-> C`}
+            </button>
+          </div>
+
+          </form>
+      </div>
+
       {/* Foods list grouped by category */}
       <div className="grid gap-6">
         {categories.map(category => {
-          const categoryFoods = foods.filter(food => food.category_id === category.id)
+          const categoryFoods = foods.filter(food => food.category_ids.includes(category.id))
           if (categoryFoods.length === 0) return null
 
           return (

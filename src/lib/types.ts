@@ -11,10 +11,10 @@ export interface Food {
   id: number
   name: string
   name_ru: string
-  category_id: number
-  created_at: string
+  category_ids: number[]
+  // created_at: string
   // Join fields
-  category?: Category
+  // category?: Category
 }
 
 export interface Combination {

@@ -3,6 +3,12 @@ import { api } from '../lib/api'
 import { Food, Combination } from '../lib/types'
 import Foods from './Foods'
 
+type MathResult = {
+  goodPairs: string[];
+  badPairs: string[];
+  notFound: string[];
+}
+
 const IngredientsChecker = () => {
   const [foods, setFoods] = useState<Food[]>([])
   const [combinations, setCombinations] = useState<Combination[]>([])
@@ -11,10 +17,7 @@ const IngredientsChecker = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [openMenu, setOpenMenu] = useState(false)
   const [selectedIngredients, setSelectedIngredients] = useState<Food[]>([])
-  const [matchResults, setMatchResults] = useState<{
-    goodPairs: string[];
-    badPairs: string[];
-  } | null>(null)
+  const [matchResults, setMatchResults] = useState<MathResult | null>(null)
 
   useEffect(() => {
     loadData()
@@ -50,9 +53,10 @@ const IngredientsChecker = () => {
 
   const checkIngredients = () => {
     const results = {
-      goodPairs: [] as string[],
-      badPairs: [] as string[]
-    }
+      goodPairs: [],
+      badPairs: [],
+      notFound: []
+    } as MathResult
 
     for (let i = 0; i < selectedIngredients.length; i++) {
       for (let j = i + 1; j < selectedIngredients.length; j++) {
@@ -66,24 +70,27 @@ const IngredientsChecker = () => {
              (combo.food1?.id === food2.id && combo.food2?.id === food1.id))) ||
         // Category to Category
           (combo.item1_type === 'category' && combo.item2_type === 'category' &&
-            ((food1.category_id === combo.item1_category_id && food2.category_id === combo.item2_category_id) ||
-             (food1.category_id === combo.item2_category_id && food2.category_id === combo.item1_category_id))) ||
+            ((food1.category_ids.includes(combo.item1_category_id ?? NaN) && food2.category_ids.includes(combo.item2_category_id ?? NaN)) ||
+             (food1.category_ids.includes(combo.item2_category_id ?? NaN) && food2.category_ids.includes(combo.item1_category_id ?? NaN)))) ||
         // Food to Category
           (combo.item1_type === 'food' && combo.item2_type === 'category' &&
-            ((combo.food1?.id === food1.id && food2.category_id === combo.item2_category_id) ||
-             (combo.food1?.id === food2.id && food1.category_id === combo.item2_category_id))) ||
+            ((combo.food1?.id === food1.id && food2.category_ids.includes(combo.item2_category_id ?? NaN)) ||
+             (combo.food1?.id === food2.id && food1.category_ids.includes(combo.item2_category_id ?? NaN)))) ||
          // Category to Food
           (combo.item1_type === 'category' && combo.item2_type === 'food' &&
-            ((food1.category_id === combo.item1_category_id && combo.food2?.id === food2.id) ||
-             (food2.category_id === combo.item1_category_id && combo.food2?.id === food1.id)))
+            ((food1.category_ids.includes(combo.item1_category_id ?? NaN) && combo.food2?.id === food2.id) ||
+             (food2.category_ids.includes(combo.item1_category_id ?? NaN) && combo.food2?.id === food1.id)))
         )
 
 
         const pair = `${language === 'en' ? food1.name : food1.name_ru} + ${language === 'en' ? food2.name : food2.name_ru}`
-        if (match) {
-          results.goodPairs.push(`${pair} (${match.rating}⭐)`)
+
+        if (match?.rating! > 3) {
+          results.goodPairs.push(`${pair} (${match?.rating}⭐)`)
+        } else if (match?.rating) {
+          results.badPairs.push(`${pair} (${match?.rating}⭐)`)
         } else {
-          results.badPairs.push(pair)
+          results.notFound.push(pair)
         }
       }
     }
@@ -212,6 +219,7 @@ const IngredientsChecker = () => {
                 const value = (e.target as HTMLLIElement)?.value
                 if (value == null) return
                 handleUpdateIngridient(value)
+                setSearchTerm('')
               }}
             >
               {foods.filter(food => language === 'en' ? food.name.toLowerCase().includes(searchTerm.toLowerCase()) : food.name_ru.toLowerCase().includes(searchTerm.toLowerCase())).map(food => (
@@ -247,6 +255,17 @@ const IngredientsChecker = () => {
               </div>
             )}
             {matchResults.badPairs.length > 0 && (
+              <div>
+                <h2 className="font-semibold text-red-600 mb-2">
+                {language === 'en' ? 'Bad combinations:' : 'Вредные сочетания:'}                </h2>
+                <div className="space-y-1">
+                  {matchResults.badPairs.map(pair => (
+                    <div key={pair} className="text-red-600">✗ {pair}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {matchResults.notFound.length > 0 && (
               <div>
                 <h2 className="font-semibold text-red-600 mb-2">
                   {language === 'en' ? 'Not found in database:' : 'Не найдено в базе данных:'}

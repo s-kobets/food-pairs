@@ -64,13 +64,13 @@ const Combinations = () => {
       const matchesCategory2 = combo.category2 && (language === 'en' ? combo.category2.display_name : combo.category2.display_name_ru).toLowerCase().includes(searchLower)
 
       // Category relationships
-      const food1MatchesCategory = matchedCategory && combo.food1?.category_id === matchedCategory.id
-      const food2MatchesCategory = matchedCategory && combo.food2?.category_id === matchedCategory.id
+      const food1MatchesCategory = matchedCategory && combo.food1?.category_ids?.includes(matchedCategory.id)
+      const food2MatchesCategory = matchedCategory && combo.food2?.category_ids?.includes(matchedCategory.id)
 
       // Food's category relationships
-      const matchedFoodCategory = matchedFood?.category_id
-      const category1MatchesFood = matchedFoodCategory && combo.category1?.id === matchedFoodCategory
-      const category2MatchesFood = matchedFoodCategory && combo.category2?.id === matchedFoodCategory
+      const matchedFoodCategories = matchedFood?.category_ids
+      const category1MatchesFood = matchedFoodCategories?.length && matchedFoodCategories?.includes(combo.category1?.id ?? NaN)
+      const category2MatchesFood = matchedFoodCategories?.length && matchedFoodCategories?.includes(combo.category2?.id ?? NaN)
 
       return (
         matchesFood1 || matchesFood2 || 
@@ -131,7 +131,7 @@ const Combinations = () => {
     )
 
     if (matchedFood) {
-      const foodCategory = categories.find(c => c.id === matchedFood.category_id)
+      const foodCategory = categories.find(c => matchedFood.category_ids.includes(c.id))
       return (
         <div>
           <div>
@@ -344,12 +344,12 @@ const Combinations = () => {
       <div className="bg-white rounded-lg shadow">
         <h2 className="text-lg font-semibold p-4 border-b">
           {searchTerm 
-            ? `Found Combinations (${filteredCombinations.length})`
-            : `All Combinations (${combinations.length})`
+            ? `Found Combinations (${filteredCombinations?.length})`
+            : `All Combinations (${combinations?.length})`
           }
         </h2>
         <div className="divide-y">
-          {filteredCombinations.map(combo => (
+          {filteredCombinations?.map(combo => (
             <div key={combo.id} className="p-4 hover:bg-gray-50">
               {searchTerm ? formatSearchResult(combo) : <div>
                 <span className={`${combo.rating < 3 ? 'text-red-500' : 'text-gray-900'}`}>
@@ -360,7 +360,7 @@ const Combinations = () => {
               }
             </div>
           ))}
-          {filteredCombinations.length === 0 && (
+          {filteredCombinations?.length === 0 && (
             <div className="p-4 text-gray-500">
               {searchTerm 
                 ? 'No combinations found for your search.'

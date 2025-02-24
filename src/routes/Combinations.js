@@ -53,12 +53,12 @@ const Combinations = () => {
             const matchesCategory1 = combo.category1 && (language === 'en' ? combo.category1.display_name : combo.category1.display_name_ru).toLowerCase().includes(searchLower);
             const matchesCategory2 = combo.category2 && (language === 'en' ? combo.category2.display_name : combo.category2.display_name_ru).toLowerCase().includes(searchLower);
             // Category relationships
-            const food1MatchesCategory = matchedCategory && combo.food1?.category_id === matchedCategory.id;
-            const food2MatchesCategory = matchedCategory && combo.food2?.category_id === matchedCategory.id;
+            const food1MatchesCategory = matchedCategory && combo.food1?.category_ids?.includes(matchedCategory.id);
+            const food2MatchesCategory = matchedCategory && combo.food2?.category_ids?.includes(matchedCategory.id);
             // Food's category relationships
-            const matchedFoodCategory = matchedFood?.category_id;
-            const category1MatchesFood = matchedFoodCategory && combo.category1?.id === matchedFoodCategory;
-            const category2MatchesFood = matchedFoodCategory && combo.category2?.id === matchedFoodCategory;
+            const matchedFoodCategories = matchedFood?.category_ids;
+            const category1MatchesFood = matchedFoodCategories?.length && matchedFoodCategories?.includes(combo.category1?.id ?? NaN);
+            const category2MatchesFood = matchedFoodCategories?.length && matchedFoodCategories?.includes(combo.category2?.id ?? NaN);
             return (matchesFood1 || matchesFood2 ||
                 matchesCategory1 || matchesCategory2 ||
                 food1MatchesCategory || food2MatchesCategory ||
@@ -106,7 +106,7 @@ const Combinations = () => {
         // Add context for category relationships
         const matchedFood = foods.find(f => (language === 'en' ? f.name : f.name_ru).toLowerCase().includes(searchLower));
         if (matchedFood) {
-            const foodCategory = categories.find(c => c.id === matchedFood.category_id);
+            const foodCategory = categories.find(c => matchedFood.category_ids.includes(c.id));
             return (_jsxs("div", { children: [_jsxs("div", { children: [result, _jsxs("span", { className: 'ml-4', children: [combo.rating, "\u2B50"] })] }), _jsxs("div", { className: "text-sm text-gray-500", children: ["Related to \"", matchedFood.name, "\" (", foodCategory?.display_name, " - ", foodCategory?.display_name_ru, ")"] })] }));
         }
         const matchedCategory = categories.find(c => (language === 'en' ? c.display_name : c.display_name_ru).toLowerCase().includes(searchLower));
@@ -130,8 +130,8 @@ const Combinations = () => {
                                                         : 'bg-gray-100 hover:bg-gray-200'}`, children: "Food" })] }), _jsxs("select", { value: secondId, onChange: (e) => setSecondId(Number(e.target.value)), className: "w-full p-2 border rounded", children: [_jsxs("option", { value: "", children: ["Select ", secondType] }), secondType === 'category'
                                                     ? categories.map(cat => (_jsxs("option", { value: cat.id, children: [cat.display_name, " (", cat.display_name_ru, ")"] }, cat.id)))
                                                     : foods.map(food => (_jsxs("option", { value: food.id, children: [food.name, " (", food.name_ru, ")"] }, food.id)))] })] })] }), _jsxs("div", { className: "mb-4", children: [_jsx("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Rating" }), _jsx("select", { className: "w-full p-2 border rounded", value: rating, onChange: (e) => setRating(Number(e.target.value)), children: [1, 2, 3, 4, 5].map(value => (_jsxs("option", { value: value, children: [value, " \u2B50"] }, value))) })] }), _jsx("button", { type: "button", onClick: handleAddCombination, disabled: !firstId || !secondId, className: "w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed", children: "Add Combination" })] }) }), _jsx("div", { className: "mb-6", children: _jsx("input", { type: "text", placeholder: "Search combinations (e.g., 'tomato' or 'vegetable')...", value: searchTerm, onChange: (e) => setSearchTerm(e.target.value), className: "w-full p-2 border rounded" }) }), _jsxs("div", { className: "bg-white rounded-lg shadow", children: [_jsx("h2", { className: "text-lg font-semibold p-4 border-b", children: searchTerm
-                            ? `Found Combinations (${filteredCombinations.length})`
-                            : `All Combinations (${combinations.length})` }), _jsxs("div", { className: "divide-y", children: [filteredCombinations.map(combo => (_jsx("div", { className: "p-4 hover:bg-gray-50", children: searchTerm ? formatSearchResult(combo) : _jsxs("div", { children: [_jsx("span", { className: `${combo.rating < 3 ? 'text-red-500' : 'text-gray-900'}`, children: formatCombinationText(combo) }), _jsxs("span", { className: 'ml-4', children: [combo.rating, "\u2B50"] })] }) }, combo.id))), filteredCombinations.length === 0 && (_jsx("div", { className: "p-4 text-gray-500", children: searchTerm
+                            ? `Found Combinations (${filteredCombinations?.length})`
+                            : `All Combinations (${combinations?.length})` }), _jsxs("div", { className: "divide-y", children: [filteredCombinations?.map(combo => (_jsx("div", { className: "p-4 hover:bg-gray-50", children: searchTerm ? formatSearchResult(combo) : _jsxs("div", { children: [_jsx("span", { className: `${combo.rating < 3 ? 'text-red-500' : 'text-gray-900'}`, children: formatCombinationText(combo) }), _jsxs("span", { className: 'ml-4', children: [combo.rating, "\u2B50"] })] }) }, combo.id))), filteredCombinations?.length === 0 && (_jsx("div", { className: "p-4 text-gray-500", children: searchTerm
                                     ? 'No combinations found for your search.'
                                     : 'No combinations yet. Add your first one above!' }))] })] })] }));
 };
