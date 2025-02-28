@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { Category, Food, Combination } from './types'
+import { Category, Food, Combination, FoodCategory } from './types'
 
 export const api = {
   // Categories
@@ -24,6 +24,15 @@ export const api = {
       .order('name')
     
     return data?.map(i => ({id: i.id, name: i.name, name_ru: i.name_ru, category_ids: i.foods_categories.map(c => c.category_id)} as Food)) ?? []
+  },
+
+  // Categories
+  async getFoodsCategories() {
+    const { data } = await supabase
+      .from('foods_categories')
+      .select('*')
+      .order('food_id')
+    return data as FoodCategory[]
   },
 
   async addFoodCategory(foodId: number, categoryId: number) {

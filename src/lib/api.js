@@ -21,6 +21,14 @@ export const api = {
             .order('name');
         return data?.map(i => ({ id: i.id, name: i.name, name_ru: i.name_ru, category_ids: i.foods_categories.map(c => c.category_id) })) ?? [];
     },
+    // Categories
+    async getFoodsCategories() {
+        const { data } = await supabase
+            .from('foods_categories')
+            .select('*')
+            .order('food_id');
+        return data;
+    },
     async addFoodCategory(foodId, categoryId) {
         const { data, error } = await supabase
             .from('foods_categories')
