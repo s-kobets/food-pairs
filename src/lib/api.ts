@@ -13,7 +13,7 @@ interface ApiRequest<T = any> {
 
 // Generic function to make API calls
 async function callApi<T>(request: ApiRequest): Promise<T> {
-  const response = await fetch('/netlify/functions/data', {
+  const response = await fetch('/.netlify/functions/data', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
