@@ -6,7 +6,7 @@ export default defineConfig({
     server: {
         port: 3000,
         proxy: {
-            '/netlify/functions': {
+            '/.netlify/functions': {
                 target: 'http://localhost:3000',
                 changeOrigin: true,
                 secure: false,
