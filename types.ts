@@ -35,3 +35,16 @@ export interface Combination {
   category1?: Category
   category2?: Category
 } 
+
+export enum ActionType {
+  getCategories = 'getCategories',
+  getFoods = 'getFoods',
+  getCombinations = 'getCombinations',
+  getOneCombination = 'getOneCombination',
+  addFood = 'addFood',
+  addCategory = 'addCategory',
+  addCombination = 'addCombination',
+  addCombinations = 'addCombinations',
+  getFoodsCategories = 'getFoodsCategories',
+  addFoodsCategories = 'addFoodsCategories'
+}

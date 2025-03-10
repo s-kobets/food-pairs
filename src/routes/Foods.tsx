@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
-import { Food, Category } from '../lib/types'
+import { Food, Category } from '../../types'
 import { getCurrentUserRole, permissions } from '../lib/permissions'
 
 const Foods = () => {

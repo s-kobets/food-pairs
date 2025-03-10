@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useRoutes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { AuthProvider } from './context/AuthContext'
+// import { AuthProvider } from './context/AuthContext'
 import Header from './components/Header'
 import Home from './routes/Home'
 import Combinations from './routes/Combinations'
@@ -48,7 +48,7 @@ function App() {
   }
 
   return (
-    <AuthProvider>
+    // <AuthProvider>
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Header />
@@ -64,7 +64,7 @@ function App() {
           <Toaster position="bottom-right" />
         </div>
       </Router>
-    </AuthProvider>
+    // </AuthProvider> 
   )
 }
 

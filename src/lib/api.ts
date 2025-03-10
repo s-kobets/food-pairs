@@ -1,110 +1,109 @@
-import { supabase } from './supabase'
-import { Category, Food, Combination, FoodCategory } from './types'
+import { Category, Food, Combination, FoodCategory, ActionType } from '../../types'
+
+// Type definitions for API requests
+interface ApiResponse<T> {
+  data?: T
+  error?: string
+}
+
+interface ApiRequest<T = any> {
+  action: string
+  payload?: T
+}
+
+// Generic function to make API calls
+async function callApi<T>(request: ApiRequest): Promise<T> {
+  const response = await fetch('/.netlify/functions/data', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  })
+
+  if (!response.ok) {
+    throw new Error(`API call failed: ${response.statusText}`)
+  }
+
+  const result = await response.json()
+  if (result.error) {
+    throw new Error(result.error)
+  }
+
+  return result
+}
 
 export const api = {
   // Categories
-  async getCategories() {
-    const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .order('display_name')
-    return data as Category[]
+  async getCategories(): Promise<Category[]> {
+    return callApi<Category[]>({ action: ActionType.getCategories })
   },
 
   // Foods
-  async getFoods() {
-    const { data } = await supabase
-      .from('foods')
-      .select(`
-        id, 
-        name,
-        name_ru,
-        foods_categories (category_id)
-      `)
-      .order('name')
-    
-    return data?.map(i => ({id: i.id, name: i.name, name_ru: i.name_ru, category_ids: i.foods_categories.map(c => c.category_id)} as Food)) ?? []
+  async getFoods(): Promise<Food[]> {
+    const foods = await callApi<any[]>({ action: ActionType.getFoods })
+    return foods.map(i => ({
+      id: i.id,
+      name: i.name,
+      name_ru: i.name_ru,
+      category_ids: i.foods_categories.map((c: any) => c.category_id)
+    }))
+  },
+
+  async addFood(name: string, name_ru: string, categoryId: number): Promise<Food> {
+    return callApi<Food>({
+      action: ActionType.addFood,
+      payload: { name, name_ru, categoryId }
+    })
+  },
+
+  // Combinations
+  async getCombinations(): Promise<Combination[]> {
+    return callApi<Combination[]>({ action: ActionType.getCombinations })
+  },
+  // Combinations
+  async getOneCombination(): Promise<Combination> {
+    return callApi<Combination>({ action: ActionType.getOneCombination })
+  },
+
+  async addCombination(combination: Omit<Combination, 'id' | 'created_at'>) {
+    return callApi<Combination>({
+      action: ActionType.addCombination,
+      payload: combination
+    })
+  },
+
+
+  async addCombinations(combinations: Omit<Combination, 'id' | 'created_at'>[]) {
+    return callApi<Combination[]>({
+      action: ActionType.addCombinations,
+      payload: combinations
+    })
+  },
+
+  async addCategory(
+    name: string,
+    display_name: string,
+    display_name_ru: string,
+    color: string
+  ) {
+    return callApi<Category>({
+      action: ActionType.addCategory,
+      payload: { name, display_name, display_name_ru, color }
+    })
   },
 
   // Categories
   async getFoodsCategories() {
-    const { data } = await supabase
-      .from('foods_categories')
-      .select('*')
-      .order('food_id')
-    return data as FoodCategory[]
+    return callApi<FoodCategory>({
+      action: ActionType.getFoodsCategories
+    })
   },
 
   async addFoodCategory(foodId: number, categoryId: number) {
-    const { data, error } = await supabase
-      .from('foods_categories')
-      .insert(({ food_id: foodId, category_id: categoryId }))
-      .select()
-      .single()
-
-    if (error) throw error
-
-    return data
+    return callApi<FoodCategory>({
+      action: ActionType.addFoodsCategories,
+      payload: {food_id: foodId, category_id: categoryId}
+    })
   },
-
-  async addFood(name: string, name_ru: string, categoryId: number) {
-    const { data: food, error: foodError } = await supabase
-      .from('foods')
-      .insert([{ name, name_ru }])
-      .select()
-      .single()
-
-    if (foodError) throw foodError
-
-    const foodId = food.id
-    const { error: categoryError } = await this.addFoodCategory(foodId, categoryId)
-    if (categoryError) throw categoryError
-
-    return food
-  },
-
-  // Combinations
-  async getCombinations() {
-    const { data } = await supabase
-      .from('combinations')
-      .select(`
-        *,
-        food1:foods!item1_id(id, name, name_ru),
-        food2:foods!item2_id(id, name, name_ru),
-        category1:categories!item1_category_id(id, display_name, display_name_ru),
-        category2:categories!item2_category_id(id, display_name, display_name_ru)
-      `)
-      .order('created_at', { ascending: false })
-    return data as Combination[]
-  },
-
-  async addCombination(combination: Omit<Combination, 'id' | 'created_at'>) {
-    const { data, error } = await supabase
-      .from('combinations')
-      .insert([combination])
-      .select()
-    if (error) throw error
-    return data[0] as Combination
-  },
-
-  async addCategory(
-    name: string, 
-    display_name: string, 
-    display_name_ru: string, 
-    color: string
-  ) {
-    const { data, error } = await supabase
-      .from('categories')
-      .insert([{ 
-        name, 
-        display_name, 
-        display_name_ru, 
-        color 
-      }])
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  }
 } 

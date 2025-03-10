@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from 'd3';
 import { api } from "../lib/api";
-import { Category, Combination, Food, FoodCategory } from "../lib/types";
+import { Category, Combination, Food, FoodCategory } from "../../types";
 
 // Add these type definitions at the top of the file
 interface NodeType extends Partial<Category>, Partial<Food> {

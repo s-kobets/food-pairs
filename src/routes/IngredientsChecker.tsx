@@ -1,6 +1,6 @@
 import { ChangeEvent, ClipboardEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { api } from '../lib/api'
-import { Food, Combination } from '../lib/types'
+import { Food, Combination } from '../../types'
 import Foods from './Foods'
 
 type MathResult = {

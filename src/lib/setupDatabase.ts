@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { api } from './api'
 
 // Define types for better type safety
 interface InitialCombination {
@@ -48,11 +48,7 @@ const initialCombinations: InitialCombination[] = [
 export async function setupDatabase() {
   try {
     // First check if the table exists
-    const { data: existingTable } = await supabase
-      .from('combinations')
-      .select('id')
-      .limit(1)
-      .maybeSingle()
+    const existingTable = await api.getOneCombination()
 
     // If we can query the table, it exists
     if (existingTable !== null) {
@@ -61,12 +57,15 @@ export async function setupDatabase() {
     }
 
     // Insert initial data
-    const { error: insertError } = await supabase
-      .from('combinations')
-      .insert(initialCombinations)
-
+    let insertError = undefined
+    try {
+      await api.addCombinations(initialCombinations)
+    } catch (error) {
+      insertError = error
+    }
+    
     if (insertError) {
-      throw new Error(`Error inserting initial data: ${insertError.message}`)
+      throw new Error(`Error inserting initial data: ${insertError instanceof Error? insertError?.message: 'Unknown error'}`)
     }
 
     console.log('Successfully initialized database with seed data')
@@ -81,12 +80,8 @@ export async function setupDatabase() {
 // Helper function to check if database is properly set up
 export async function checkDatabaseHealth(): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('combinations')
-      .select('id')
-      .limit(1)
+    await api.getOneCombination()
 
-    if (error) throw error
     return true
   } catch (error) {
     console.error('Database health check failed:', error)

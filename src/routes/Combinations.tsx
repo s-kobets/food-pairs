@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
-import { Category, Food, Combination } from '../lib/types'
+import { Category, Food, Combination } from '../../types'
 import { permissions, getCurrentUserRole } from '../lib/permissions'
 import ForceGraph from '../components/ForceGraph'
 
